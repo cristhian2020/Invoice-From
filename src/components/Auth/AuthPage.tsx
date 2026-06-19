@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { FcGoogle } from "react-icons/fc";
+// import { FcGoogle } from "react-icons/fc";
 import { GrUserWorker } from "react-icons/gr";
 
 
 const AuthPage = () => {
-  const { loginWithGoogle, loginWithEmail, registerWithEmail } = useAuth();
+  const { /* loginWithGoogle, */ loginWithEmail, registerWithEmail } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  const [employeeNumber, setEmployeeNumber] = useState("");
+  const [projects, setProjects] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,21 +42,21 @@ const AuthPage = () => {
     return errMessage || "An unexpected error occurred. Please try again.";
   };
 
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const { error: signInError } = await loginWithGoogle();
-      if (signInError) {
-        setError(translateError(signInError));
-      }
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      setError(translateError(message));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleGoogleSignIn = async () => {
+  //   setError(null);
+  //   setLoading(true);
+  //   try {
+  //     const { error: signInError } = await loginWithGoogle();
+  //     if (signInError) {
+  //       setError(translateError(signInError));
+  //     }
+  //   } catch (e) {
+  //     const message = e instanceof Error ? e.message : String(e);
+  //     setError(translateError(message));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +72,11 @@ const AuthPage = () => {
       return;
     }
 
+    if (!isLogin && (!name.trim() || !employeeNumber.trim())) {
+      setError("Name and Employee Number are required for registration.");
+      return;
+    }
+
     setLoading(true);
     try {
       if (isLogin) {
@@ -77,7 +85,18 @@ const AuthPage = () => {
           setError(translateError(signInError));
         }
       } else {
-        const { error: signUpError } = await registerWithEmail(email, password);
+        const projectList = projects
+          .split(",")
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0);
+          
+        const { error: signUpError } = await registerWithEmail(
+          email,
+          password,
+          name.trim(),
+          employeeNumber.trim(),
+          projectList
+        );
         if (signUpError) {
           setError(translateError(signUpError));
         }
@@ -148,6 +167,75 @@ const AuthPage = () => {
 
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full text-black pl-10 pr-4 py-2.5 bg-white/60 border border-slate-700/70 rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors text-sm"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
+                  Employee Number
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm-1.2 6.477a3 3 0 00-2.6 0 5.12 5.12 0 00-.783.476.375.375 0 00.117.658h3.866a.375.375 0 00.117-.658 5.12 5.12 0 00-.783-.476z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    value={employeeNumber}
+                    onChange={(e) => setEmployeeNumber(e.target.value)}
+                    placeholder="EMP001"
+                    className="w-full text-black pl-10 pr-4 py-2.5 bg-white/60 border border-slate-700/70 rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors text-sm"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
+                  Projects (comma-separated)
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    value={projects}
+                    onChange={(e) => setProjects(e.target.value)}
+                    placeholder="Project Alpha, Project Beta"
+                    className="w-full text-black pl-10 pr-4 py-2.5 bg-white/60 border border-slate-700/70 rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors text-sm"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
           <div>
             <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
               Email
@@ -247,21 +335,21 @@ const AuthPage = () => {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="relative my-6 flex items-center justify-center">
-          <span className="absolute bg-white/60 px-3 text-xs font-semibold text-black uppercase">Or continue with</span>
-        </div>
+        {/* Divider
+        <div className="relative my-6 flex items-center justify-center border-t border-gray-200">
+          <span className="absolute bg-white px-3 text-xs font-semibold text-gray-500 uppercase">Or continue with</span>
+        </div> */}
 
-        {/* Google Sign In Button */}
+        {/* Google Sign In Button
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg border border-slate-200 shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg border border-slate-200 shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm text-black"
         >
           <FcGoogle className="w-7 h-7" />
-         Sign in with Google
-        </button>
+          Sign in with Google
+        </button> */}
       </div>
     </div>
   );
