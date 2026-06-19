@@ -9,11 +9,13 @@ import {
   logout,
   updateProfile
 } from '../firebase/config';
-import { saveUserProfile } from '../firebase/firestoreService';
+import { saveUserProfile, getUserProfile } from '../firebase/firestoreService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  userRole: string;
+  isAdmin: boolean;
   // loginWithGoogle: () => Promise<{ user: User | null; error: string | null }>;
   loginWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>;
   registerWithEmail: (
@@ -39,28 +41,25 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>("employee");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      setLoading(false);
 
-      // Auto-profile initialization commented out since Google Auth is disabled
-      /*
       if (currentUser) {
-        getUserProfile(currentUser.uid).then(({ profile }) => {
-          if (!profile) {
-            saveUserProfile(currentUser.uid, {
-              name: currentUser.displayName || '',
-              email: currentUser.email || '',
-              employeeNumber: '',
-              projects: [],
-              role: 'employee'
-            });
-          }
-        });
+        // Fetch role from Firestore profile
+        const { profile } = await getUserProfile(currentUser.uid);
+        if (profile) {
+          setUserRole(profile.role || "employee");
+        } else {
+          setUserRole("employee");
+        }
+      } else {
+        setUserRole("employee");
       }
-      */
+
+      setLoading(false);
     });
 
     return unsubscribe;
@@ -94,6 +93,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error("Failed to save profile to Firestore:", dbError);
           return { user: registeredUser, error: `Account created, but database profile setup failed: ${dbError}. Please check Firestore rules/connection.` };
         }
+
+        setUserRole("employee");
       }
       return { user: registeredUser, error: null };
     } catch (err) {
@@ -102,9 +103,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const isAdmin = userRole === "admin";
+
   const value: AuthContextType = {
     user,
     loading,
+    userRole,
+    isAdmin,
     // loginWithGoogle,
     loginWithEmail,
     registerWithEmail: handleRegisterWithEmail,
