@@ -193,7 +193,7 @@ const PDFTemplate = forwardRef<HTMLDivElement, Props>(
 
         <div style={S.billBox}>
           <div style={S.billBoxInner}>
-            <div style={S.billLabel}>Total Bill Hrs =</div>
+            <div style={S.billLabel}>Total Bill Hours =</div>
             <div style={S.billValue}>{totalBillHours}</div>
           </div>
         </div>

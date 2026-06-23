@@ -46,7 +46,7 @@ export default function DailyHoursTable({
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-gray-200">
-              {["DAY", "Date", "Start Time", "End Time", "Hours", "Bill Hrs", "Remarks"].map((h) => (
+              {["DAY", "Date", "Start Time (AM)", "End Time (PM)", "Hours", "Bill Hours", "Remarks"].map((h) => (
                 <th key={h} className="border border-gray-300 p-2 text-left">
                   {h}
                 </th>
@@ -106,15 +106,13 @@ export default function DailyHoursTable({
                 </tr>
               );
             })}
-            {saturdayHasData && (
-              <TotalsRow
-                totalHours={totalHours}
-                totalBillHours={totalBillHours}
-                totalAmount={totalAmount}
-                rate={rate}
-                colSpan={4}
-              />
-            )}
+            <TotalsRow
+              totalHours={totalHours}
+              totalBillHours={totalBillHours}
+              totalAmount={totalAmount}
+              rate={rate}
+              colSpan={4}
+            />
           </tbody>
         </table>
         {Object.keys(dayErrors).length > 0 && (
@@ -167,7 +165,7 @@ export default function DailyHoursTable({
                 </div>
                 {day === "Saturday" && (
                   <div>
-                    <label className="block text-xs text-gray-500">Bill Hrs</label>
+                    <label className="block text-xs text-gray-500">Bill Hours</label>
                     <input type="text" value={weekData[day].billHours} readOnly className={readonlyClass} />
                   </div>
                 )}
@@ -185,27 +183,25 @@ export default function DailyHoursTable({
           );
         })}
 
-        {/* Mobile totals - only when Saturday has data */}
-        {saturdayHasData && (
-          <div className="border border-gray-300 rounded-lg p-3 bg-gray-100 font-bold text-sm">
-            <div className="flex justify-between">
-              <span>Total Hours</span>
-              <span>{totalHours}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total Bill Hours</span>
-              <span>{totalBillHours}</span>
-            </div>
-            {rate && (
-              <div className="flex justify-between mt-1 pt-1 border-t border-gray-300">
-                <span>
-                  Total ({totalHours} hrs × ${rate}/hr)
-                </span>
-                <span>${totalAmount.toFixed(2)}</span>
-              </div>
-            )}
+        {/* Mobile totals */}
+        <div className="border border-gray-300 rounded-lg p-3 bg-gray-100 font-bold text-sm">
+          <div className="flex justify-between">
+            <span>Total Hours</span>
+            <span>{totalHours}</span>
           </div>
-        )}
+          <div className="flex justify-between">
+            <span>Total Bill Hours</span>
+            <span>{totalBillHours}</span>
+          </div>
+          {rate && (
+            <div className="flex justify-between mt-1 pt-1 border-t border-gray-300">
+              <span>
+                Total ({totalHours} hrs × ${rate}/hr)
+              </span>
+              <span>${totalAmount.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
