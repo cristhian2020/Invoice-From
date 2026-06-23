@@ -3,18 +3,30 @@ import type { User } from 'firebase/auth';
 import { 
   auth, 
   onAuthStateChanged, 
-  loginWithGoogle, 
+  // loginWithGoogle, 
   loginWithEmail, 
-  registerWithEmail, 
-  logout 
+  registerWithEmail as registerWithEmailBase, 
+  logout,
+  updateProfile,
+  resetPassword
 } from '../firebase/config';
+import { saveUserProfile, getUserProfile } from '../firebase/firestoreService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  loginWithGoogle: () => Promise<{ user: User | null; error: string | null }>;
+  userRole: string;
+  isAdmin: boolean;
+  // loginWithGoogle: () => Promise<{ user: User | null; error: string | null }>;
   loginWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>;
-  registerWithEmail: (email: string, password: string) => Promise<{ user: User | null; error: string | null }>;
+  registerWithEmail: (
+    email: string, 
+    password: string, 
+    name: string, 
+    employeeNumber: string, 
+    projects: string[]
+  ) => Promise<{ user: User | null; error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
   logout: () => Promise<{ error: string | null }>;
 }
 
@@ -31,22 +43,79 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>("employee");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        // Fetch role from Firestore profile
+        const { profile } = await getUserProfile(currentUser.uid);
+        if (profile) {
+          setUserRole(profile.role || "employee");
+        } else {
+          setUserRole("employee");
+        }
+        setUser(currentUser);
+      } else {
+        setUserRole("employee");
+        setUser(null);
+      }
+
       setLoading(false);
     });
 
     return unsubscribe;
   }, []);
 
+  const handleRegisterWithEmail = async (
+    email: string, 
+    password: string, 
+    name: string, 
+    employeeNumber: string, 
+    projects: string[]
+  ) => {
+    try {
+      const { user: registeredUser, error } = await registerWithEmailBase(email, password);
+      if (error) return { user: null, error };
+      
+      if (registeredUser) {
+        // Update display name in Firebase Auth
+        await updateProfile(registeredUser, { displayName: name });
+        
+        // Save extra details in Firestore
+        const { error: dbError } = await saveUserProfile(registeredUser.uid, {
+          name,
+          email,
+          employeeNumber,
+          projects,
+          role: 'employee'
+        });
+        
+        if (dbError) {
+          console.error("Failed to save profile to Firestore:", dbError);
+          return { user: registeredUser, error: `Account created, but database profile setup failed: ${dbError}. Please check Firestore rules/connection.` };
+        }
+
+        setUserRole("employee");
+      }
+      return { user: registeredUser, error: null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { user: null, error: message };
+    }
+  };
+
+  const isAdmin = userRole === "admin";
+
   const value: AuthContextType = {
     user,
     loading,
-    loginWithGoogle,
+    userRole,
+    isAdmin,
+    // loginWithGoogle,
     loginWithEmail,
-    registerWithEmail,
+    registerWithEmail: handleRegisterWithEmail,
+    resetPassword,
     logout
   };
 

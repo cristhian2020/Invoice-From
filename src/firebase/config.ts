@@ -2,14 +2,16 @@
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
-  GoogleAuthProvider,
-  signInWithPopup,
+  // GoogleAuthProvider,
+  // signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
-
+import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -22,21 +24,21 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+const db = getFirestore(app);
+// const googleProvider = new GoogleAuthProvider();
 
 // Funciones de autenticación
-export const loginWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return { user: result.user, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { user: null, error: message };
-  }
-};
+// export const loginWithGoogle = async () => {
+//   try {
+//     const result = await signInWithPopup(auth, googleProvider);
+//     return { user: result.user, error: null };
+//   } catch (error) {
+//     const message = error instanceof Error ? error.message : String(error);
+//     return { user: null, error: message };
+//   }
+// };
 
 export const registerWithEmail = async (email:string, password:string) => {
   try {
@@ -77,4 +79,14 @@ export const getCurrentUser = () => {
   });
 };
 
-export { auth, onAuthStateChanged };
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { error: null };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { error: message };
+  }
+};
+
+export { auth, db, onAuthStateChanged, updateProfile };

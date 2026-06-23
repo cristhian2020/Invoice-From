@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useTimesheetForm } from "../../../hooks/useTimesheetForm";
@@ -6,13 +6,34 @@ import { useAuth } from "../../../context/AuthContext";
 import EmployeeInfoSection from "./EmployeeInfoSection";
 import ProjectInfoSection from "./ProjectInfoSection";
 import DailyHoursTable from "./DailyHoursTable";
+import EmailSection from "./EmailSection";
 import PDFTemplate from "./PDFTemplate";
+import { saveTimesheet, getUserProfile } from "../../../firebase/firestoreService";
 
 const FormSheet = () => {
   const form = useTimesheetForm();
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const { user, logout } = useAuth();
+
+  // Email state
+  const [recipients, setRecipients] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Auto-fill employee details if they are logged in and have a Firestore profile
+  useEffect(() => {
+    if (user?.uid) {
+      getUserProfile(user.uid).then(({ profile }) => {
+        if (profile) {
+          form.setEmployeeFields({
+            name: profile.name || "",
+            consultantId: profile.employeeNumber || ""
+          });
+        }
+      });
+    }
+  }, [user]);
 
   const downloadPDF = async () => {
     form.setSubmitted(true);
@@ -62,6 +83,94 @@ const FormSheet = () => {
     }
   };
 
+  const handleSend = async () => {
+    setEmailError("");
+    form.setSubmitted(true);
+    const isValid = form.validate();
+    if (!isValid) return;
+
+    if (!recipients.trim()) {
+      setEmailError("Recipients list is required.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // 1. Save timesheet in Firestore database
+      const timesheetData = {
+        employeeInfo: form.employeeInfo,
+        projectInfo: form.projectInfo,
+        weekData: form.weekData,
+        totalHours: form.totalHours,
+        totalBillHours: form.totalBillHours,
+        totalAmount: form.totalAmount,
+        submittedBy: user?.uid || "anonymous"
+      };
+
+      const { error } = await saveTimesheet(timesheetData);
+      if (error) {
+        setEmailError(`Failed to save timesheet in database: ${error}`);
+        setIsSaving(false);
+        return;
+      }
+
+      // 2. Open standard user mail client with prefilled inputs
+      const emails = recipients
+        .split(/[;,]/)
+        .map((e) => e.trim())
+        .filter((e) => e.length > 0)
+        .join(",");
+
+      const subject = encodeURIComponent(
+        `Weekly Timesheet - ${form.employeeInfo.name} - Project ${form.projectInfo.projectNumber}`
+      );
+
+      const bodyText = `Element Safety, LLC. - Weekly Timesheet
+
+Employee Information:
+- Name: ${form.employeeInfo.name}
+- Operator: ${form.employeeInfo.operator}
+- Consultant ID: ${form.employeeInfo.consultantId}
+- Rate: $${form.employeeInfo.rate}/hr
+
+Project Information:
+- Invoice #: ${form.projectInfo.invoice}
+- Project #: ${form.projectInfo.projectNumber}
+- Location: ${form.projectInfo.location}
+
+Weekly Hours:
+- Sunday: ${form.weekData.Sunday.hours} hrs
+- Monday: ${form.weekData.Monday.hours} hrs
+- Tuesday: ${form.weekData.Tuesday.hours} hrs
+- Wednesday: ${form.weekData.Wednesday.hours} hrs
+- Thursday: ${form.weekData.Thursday.hours} hrs
+- Friday: ${form.weekData.Friday.hours} hrs
+- Saturday: ${form.weekData.Saturday.hours} hrs (Bill Hours: ${form.weekData.Saturday.billHours || "N/A"})
+
+Totals:
+- Total Hours: ${form.totalHours} hrs
+- Total Billable Hours: ${form.totalBillHours} hrs
+- Total Amount: $${form.totalAmount}
+`;
+
+      const body = encodeURIComponent(bodyText);
+      const mailtoLink = `mailto:${emails}?subject=${subject}&body=${body}`;
+
+      // Trigger standard email client using a temporary link to ensure protocol delegation
+      const mailtoAnchor = document.createElement("a");
+      mailtoAnchor.href = mailtoLink;
+      mailtoAnchor.target = "_blank";
+      document.body.appendChild(mailtoAnchor);
+      mailtoAnchor.click();
+      document.body.removeChild(mailtoAnchor);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setEmailError(`An unexpected error occurred: ${message}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-4 px-2 sm:py-8 sm:px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-3 sm:p-6">
@@ -100,12 +209,14 @@ const FormSheet = () => {
             employeeInfo={form.employeeInfo}
             onChange={form.handleEmployeeChange}
             errors={form.submitted ? form.validationErrors.employee : undefined}
+            setEmployeeFields={form.setEmployeeFields}
           />
 
           <ProjectInfoSection
             projectInfo={form.projectInfo}
             onChange={form.handleProjectChange}
             errors={form.submitted ? form.validationErrors.project : undefined}
+            setProjectFields={form.setProjectFields}
           />
 
           <DailyHoursTable
@@ -119,7 +230,15 @@ const FormSheet = () => {
             dayErrors={form.submitted ? form.validationErrors.days : undefined}
           />
 
-          <div className="flex flex-col items-center gap-3 pt-2 sm:pt-4">
+          <EmailSection
+            recipients={recipients}
+            onChange={setRecipients}
+            onSend={handleSend}
+            isSaving={isSaving}
+            error={emailError}
+          />
+
+          <div className="flex flex-col items-center gap-3 pt-4 border-t">
             {form.submitted && (Object.keys(form.validationErrors.employee).length > 0 || Object.keys(form.validationErrors.project).length > 0 || Object.keys(form.validationErrors.days).length > 0) && (
               <p className="text-red-500 text-sm font-medium">
                Aun hay campos sin llenar
@@ -128,7 +247,7 @@ const FormSheet = () => {
             <button
               onClick={downloadPDF}
               disabled={isGeneratingPDF}
-              className={`w-full sm:w-auto px-6 py-3 text-white font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+              className={`w-full sm:w-auto px-6 py-3 text-white font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer ${
                 isGeneratingPDF
                   ? "bg-red-400 cursor-not-allowed"
                   : "bg-red-600 hover:bg-red-700"

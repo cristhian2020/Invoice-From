@@ -187,6 +187,31 @@ export function useTimesheetForm() {
     return !!(sat.startTime && sat.endTime);
   }, [weekData]);
 
+  const setEmployeeFields = useCallback((fields: Partial<EmployeeInfo>) => {
+    setEmployeeInfo((prev) => {
+      const updated = { ...prev, ...fields };
+      if ("rate" in fields) {
+        const rate = Number(fields.rate) || 0;
+        setWeekData((prevWeek) => {
+          const updatedWeek = { ...prevWeek };
+          const totalHrs = Object.values(prevWeek).reduce(
+            (sum, d) => sum + (Number(d.hours) || 0), 0
+          );
+          updatedWeek["Saturday"] = {
+            ...prevWeek["Saturday"],
+            billHours: rate ? String(Math.round(totalHrs * rate * 100) / 100) : "",
+          };
+          return updatedWeek;
+        });
+      }
+      return updated;
+    });
+  }, []);
+
+  const setProjectFields = useCallback((fields: Partial<ProjectInfo>) => {
+    setProjectInfo((prev) => ({ ...prev, ...fields }));
+  }, []);
+
   return {
     employeeInfo,
     projectInfo,
@@ -202,5 +227,7 @@ export function useTimesheetForm() {
     handleEmployeeChange,
     handleProjectChange,
     handleWeekDataChange,
+    setEmployeeFields,
+    setProjectFields,
   };
 }

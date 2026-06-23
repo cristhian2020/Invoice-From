@@ -1,9 +1,10 @@
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import FormSheet from "./components/Forms/Sheet/FormSheet"
 import AuthPage from "./components/Auth/AuthPage"
+import AdminDashboard from "./components/Admin/AdminDashboard"
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -25,6 +26,10 @@ function AppContent() {
 
   if (!user) {
     return <AuthPage />;
+  }
+
+  if (isAdmin) {
+    return <AdminDashboard />;
   }
 
   return (
