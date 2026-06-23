@@ -7,7 +7,8 @@ import {
   loginWithEmail, 
   registerWithEmail as registerWithEmailBase, 
   logout,
-  updateProfile
+  updateProfile,
+  resetPassword
 } from '../firebase/config';
 import { saveUserProfile, getUserProfile } from '../firebase/firestoreService';
 
@@ -25,6 +26,7 @@ interface AuthContextType {
     employeeNumber: string, 
     projects: string[]
   ) => Promise<{ user: User | null; error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
   logout: () => Promise<{ error: string | null }>;
 }
 
@@ -45,8 +47,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-
       if (currentUser) {
         // Fetch role from Firestore profile
         const { profile } = await getUserProfile(currentUser.uid);
@@ -55,8 +55,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setUserRole("employee");
         }
+        setUser(currentUser);
       } else {
         setUserRole("employee");
+        setUser(null);
       }
 
       setLoading(false);
@@ -113,6 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // loginWithGoogle,
     loginWithEmail,
     registerWithEmail: handleRegisterWithEmail,
+    resetPassword,
     logout
   };
 

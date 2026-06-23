@@ -5,9 +5,10 @@ import { GrUserWorker } from "react-icons/gr";
 
 
 const AuthPage = () => {
-  const { /* loginWithGoogle, */ loginWithEmail, registerWithEmail } = useAuth();
+  const { /* loginWithGoogle, */ loginWithEmail, registerWithEmail, resetPassword } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,6 +18,7 @@ const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const translateError = (errMessage: string) => {
     if (errMessage.includes("auth/invalid-email") || errMessage.includes("invalid-email")) {
@@ -43,20 +45,32 @@ const AuthPage = () => {
   };
 
   // const handleGoogleSignIn = async () => {
-  //   setError(null);
-  //   setLoading(true);
-  //   try {
-  //     const { error: signInError } = await loginWithGoogle();
-  //     if (signInError) {
-  //       setError(translateError(signInError));
-  //     }
-  //   } catch (e) {
-  //     const message = e instanceof Error ? e.message : String(e);
-  //     setError(translateError(message));
-  //   } finally {
-  //     setLoading(false);
-  //   }
+  //   ...
   // };
+
+  const handleResetPassword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!email) {
+      setError("Please enter your email to reset your password.");
+      return;
+    }
+    setError(null);
+    setSuccessMessage(null);
+    setLoading(true);
+    try {
+      const { error: resetError } = await resetPassword(email);
+      if (resetError) {
+        setError(translateError(resetError));
+      } else {
+        setSuccessMessage("A password reset link has been sent to your email.");
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(translateError(message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,40 +138,51 @@ const AuthPage = () => {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex bg-white-900/60 p-1 rounded-lg mb-6 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setIsLogin(true);
-              setError(null);
-            }}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-200 border border-green-600/30 ${
-              isLogin 
-                ? "bg-green-600 text-white shadow-md" 
-                : "text-gray-800 hover:text-green-600"
-            }`}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsLogin(false);
-              setError(null);
-            }}
-            className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-200 border border-blue-700/30 ${
-              !isLogin 
-                ? "bg-blue-600 text-white shadow-md" 
-                : "text-gray-800 hover:text-blue-600"
-            }`}
-          >
-            Register
-          </button>
-        </div>
+        {!isForgotPassword && (
+          <div className="flex bg-white-900/60 p-1 rounded-lg mb-6 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(true);
+                setError(null);
+                setSuccessMessage(null);
+              }}
+              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-200 border border-green-600/30 ${
+                isLogin 
+                  ? "bg-green-600 text-white shadow-md" 
+                  : "text-gray-800 hover:text-green-600"
+              }`}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(false);
+                setError(null);
+                setSuccessMessage(null);
+              }}
+              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-200 border border-blue-700/30 ${
+                !isLogin 
+                  ? "bg-blue-600 text-white shadow-md" 
+                  : "text-gray-800 hover:text-blue-600"
+              }`}
+            >
+              Register
+            </button>
+          </div>
+        )}
+
+        {isForgotPassword && (
+          <div className="mb-6 text-center">
+            <h3 className="text-lg font-semibold text-slate-800">Reset Password</h3>
+            <p className="text-sm text-slate-500 mt-1">Enter your email and we'll send you a reset link.</p>
+          </div>
+        )}
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 p-3 bg-red-900/40 border border-red-500/30 rounded-lg flex items-start gap-2.5 text-red-200 text-sm">
+          <div className="mb-4 p-3 bg-red-100 border border-red-500/30 rounded-lg flex items-start gap-2.5 text-black text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0 mt-0.5 text-red-400">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
@@ -165,9 +190,19 @@ const AuthPage = () => {
           </div>
         )}
 
+        {/* Success Alert */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 rounded-lg flex items-start gap-2.5 text-green-800 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 shrink-0 mt-0.5 text-green-600">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+            </svg>
+            <span>{successMessage}</span>
+          </div>
+        )}
+
         {/* Auth Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
+        <form onSubmit={isForgotPassword ? handleResetPassword : handleSubmit} className="space-y-4">
+          {!isForgotPassword && !isLogin && (
             <>
               <div>
                 <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
@@ -258,11 +293,12 @@ const AuthPage = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
-              Password
-            </label>
-            <div className="relative">
+          {!isForgotPassword && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
+                Password
+              </label>
+              <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -294,9 +330,26 @@ const AuthPage = () => {
                 )}
               </button>
             </div>
+            {isLogin && (
+              <div className="flex justify-end mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setError(null);
+                    setSuccessMessage(null);
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+                  disabled={loading}
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
           </div>
+          )}
 
-          {!isLogin && (
+          {!isForgotPassword && !isLogin && (
             <div>
               <label className="block text-xs font-semibold text-gray-800 uppercase tracking-wider mb-1.5">
                   Confirm Password
@@ -320,19 +373,38 @@ const AuthPage = () => {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-blue-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            ) : isLogin ? (
-              "Login"
-            ) : (
-              "Register"
+          <div className="flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-blue-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              ) : isForgotPassword ? (
+                "Send Reset Link"
+              ) : isLogin ? (
+                "Login"
+              ) : (
+                "Register"
+              )}
+            </button>
+
+            {isForgotPassword && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                disabled={loading}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Back to Login
+              </button>
             )}
-          </button>
+          </div>
         </form>
 
         {/* Divider
