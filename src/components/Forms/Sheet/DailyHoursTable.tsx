@@ -32,7 +32,6 @@ export default function DailyHoursTable({
   totalBillHours,
   totalAmount,
   rate,
-  saturdayHasData,
   onDayChange,
   dayErrors = {},
 }: Props) {
