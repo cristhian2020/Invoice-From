@@ -12,7 +12,6 @@ interface Props {
   totalBillHours: number;
   totalAmount: number;
   rate: string;
-  saturdayHasData: boolean;
   onDayChange: (day: string, field: keyof DayData, value: string | number) => void;
   dayErrors?: Partial<Record<string, DayErrors>>;
 }

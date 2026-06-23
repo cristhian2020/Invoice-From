@@ -225,7 +225,6 @@ Totals:
             totalBillHours={form.totalBillHours}
             totalAmount={form.totalAmount}
             rate={form.employeeInfo.rate}
-            saturdayHasData={form.saturdayHasData}
             onDayChange={form.handleWeekDataChange}
             dayErrors={form.submitted ? form.validationErrors.days : undefined}
           />
