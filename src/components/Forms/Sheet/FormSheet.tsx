@@ -17,7 +17,6 @@ const FormSheet = () => {
   const { user, logout } = useAuth();
 
   // Email state
-  const [recipients, setRecipients] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -89,7 +88,7 @@ const FormSheet = () => {
     const isValid = form.validate();
     if (!isValid) return;
 
-    if (!recipients.trim()) {
+    if (!form.recipients.trim()) {
       setEmailError("Recipients list is required.");
       return;
     }
@@ -115,7 +114,7 @@ const FormSheet = () => {
       }
 
       // 2. Open standard user mail client with prefilled inputs
-      const emails = recipients
+      const emails = form.recipients
         .split(/[;,]/)
         .map((e) => e.trim())
         .filter((e) => e.length > 0)
@@ -230,8 +229,8 @@ Totals:
           />
 
           <EmailSection
-            recipients={recipients}
-            onChange={setRecipients}
+            recipients={form.recipients}
+            onChange={form.setRecipients}
             onSend={handleSend}
             isSaving={isSaving}
             error={emailError}

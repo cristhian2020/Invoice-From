@@ -42,15 +42,19 @@ export function useTimesheetForm() {
 
   const [weekData, setWeekData] = useState<Record<string, DayData>>(INITIAL_WEEK_DATA);
 
+  const [recipients, setRecipients] = useState<string>(
+    saved.current?.recipients ?? ""
+  );
+
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>(EMPTY_ERRORS);
   const [submitted, setSubmitted] = useState(false);
 
   const saveToStorage = useCallback(() => {
     localStorage.setItem(
       LS_KEY,
-      JSON.stringify({ employeeInfo, projectInfo }),
+      JSON.stringify({ employeeInfo, projectInfo, recipients }),
     );
-  }, [employeeInfo, projectInfo]);
+  }, [employeeInfo, projectInfo, recipients]);
 
   useEffect(() => {
     saveToStorage();
@@ -229,5 +233,7 @@ export function useTimesheetForm() {
     handleWeekDataChange,
     setEmployeeFields,
     setProjectFields,
+    recipients,
+    setRecipients,
   };
 }
