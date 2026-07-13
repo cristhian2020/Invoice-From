@@ -6,8 +6,9 @@ import DashboardHome from "./DashboardHome";
 import ProjectsManager from "./ProjectsManager";
 import TimesheetsViewer from "./TimesheetsViewer";
 
+import FormSheet from "../Forms/Sheet/FormSheet";
 
-type AdminTab = "dashboard" | "projects" | "timesheets" | "employees";
+type AdminTab = "dashboard" | "projects" | "timesheets" | "create-timesheet" | "employees";
 
 const NAV_ITEMS: { key: AdminTab; label: string; icon: JSX.Element }[] = [
   {
@@ -38,6 +39,15 @@ const NAV_ITEMS: { key: AdminTab; label: string; icon: JSX.Element }[] = [
     ),
   },
   {
+    key: "create-timesheet",
+    label: "Create Timesheet",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    ),
+  },
+  {
     key: "employees",
     label: "Employees",
     icon: (
@@ -61,6 +71,8 @@ export default function AdminDashboard() {
         return <ProjectsManager />;
       case "timesheets":
         return <TimesheetsViewer />;
+      case "create-timesheet":
+        return <FormSheet hideHeader={true} />;
       case "employees":
         return <EmployeeList />;
     }

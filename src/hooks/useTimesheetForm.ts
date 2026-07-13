@@ -20,20 +20,29 @@ function loadFromStorage() {
   return null;
 }
 
+function snapTo15(time: string): string {
+  if (!time) return time;
+  const [h, m] = time.split(":").map(Number);
+  const snapped = Math.round(m / 15) * 15;
+  const finalH = snapped === 60 ? h + 1 : h;
+  const finalM = snapped === 60 ? 0 : snapped;
+  return `${String(finalH % 24).padStart(2, "0")}:${String(finalM).padStart(2, "0")}`;
+}
+
 function calculateHours(startTime: string, endTime: string): number {
   if (!startTime || !endTime) return 0;
   const start = dayjs(`2000-01-01T${startTime}`);
   let end = dayjs(`2000-01-01T${endTime}`);
   if (end.isBefore(start)) end = end.add(1, "day");
   const diff = end.diff(start, "hour", true);
-  return Math.round(diff * 100) / 100;
+  return Math.ceil(diff * 100) / 100;
 }
 
 export function useTimesheetForm() {
   const saved = useRef(loadFromStorage());
 
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo>(
-    saved.current?.employeeInfo ?? { name: "", operator: "", consultantId: "", rate: "" },
+    saved.current?.employeeInfo ?? { name: "", operator: "", consultantId: "" },
   );
 
   const [projectInfo, setProjectInfo] = useState<ProjectInfo>(
@@ -64,7 +73,7 @@ export function useTimesheetForm() {
     const errors: ValidationErrors = { employee: {}, project: {}, days: {} };
     let isValid = true;
 
-    const requiredEmployee: (keyof EmployeeInfo)[] = ["name", "operator", "consultantId", "rate"];
+    const requiredEmployee: (keyof EmployeeInfo)[] = ["name", "operator", "consultantId"];
     for (const field of requiredEmployee) {
       if (!employeeInfo[field].trim()) {
         errors.employee[field] = true;
@@ -116,26 +125,6 @@ export function useTimesheetForm() {
   const handleEmployeeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEmployeeInfo((prev) => ({ ...prev, [name]: value }));
-    if (name === "rate") {
-      const rate = Number(value) || 0;
-      setWeekData((prev) => {
-        const updated = { ...prev };
-        for (const day of DAYS) {
-          if (day === "Saturday") {
-            const totalHrs = Object.values(prev).reduce(
-              (sum, d) => sum + (Number(d.hours) || 0), 0
-            );
-            updated[day] = {
-              ...prev[day],
-              billHours: rate ? String(Math.round(totalHrs * rate * 100) / 100) : "",
-            };
-          } else {
-            updated[day] = { ...prev[day], billHours: "" };
-          }
-        }
-        return updated;
-      });
-    }
   };
 
   const handleProjectChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -145,46 +134,26 @@ export function useTimesheetForm() {
 
   const handleWeekDataChange = (day: string, field: keyof DayData, value: string | number) => {
     setWeekData((prev) => {
-      const updated = { ...prev[day], [field]: value };
+      let finalValue = value;
+      if ((field === "startTime" || field === "endTime") && typeof value === "string") {
+        finalValue = snapTo15(value);
+      }
+      const updated = { ...prev[day], [field]: finalValue };
       if (field === "startTime" || field === "endTime") {
         updated.hours = calculateHours(updated.startTime, updated.endTime);
       }
 
-      const newWeek = { ...prev, [day]: updated };
-
-      const rate = Number(employeeInfo.rate) || 0;
-      const totalHrs = Object.values(newWeek).reduce(
-        (sum, d) => sum + (Number(d.hours) || 0), 0
-      );
-      newWeek["Saturday"] = {
-        ...newWeek["Saturday"],
-        billHours: rate ? String(Math.round(totalHrs * rate * 100) / 100) : "",
-      };
-
-      for (const d of DAYS) {
-        if (d !== "Saturday") {
-          newWeek[d] = { ...newWeek[d], billHours: "" };
-        }
-      }
-
-      return newWeek;
+      return { ...prev, [day]: updated };
     });
   };
 
   const totalHours = useMemo(
-    () => Object.values(weekData).reduce((sum, d) => sum + (Number(d.hours) || 0), 0),
+    () => {
+      const raw = Object.values(weekData).reduce((sum, d) => sum + (Number(d.hours) || 0), 0);
+      return Math.ceil(raw * 100) / 100;
+    },
     [weekData],
   );
-
-  const totalBillHours = useMemo(
-    () => Number(weekData["Saturday"]?.billHours) || 0,
-    [weekData],
-  );
-
-  const totalAmount = useMemo(() => {
-    const rate = Number(employeeInfo.rate) || 0;
-    return Math.round(totalHours * rate * 100) / 100;
-  }, [totalHours, employeeInfo.rate]);
 
   const saturdayHasData = useMemo(() => {
     const sat = weekData["Saturday"];
@@ -192,24 +161,7 @@ export function useTimesheetForm() {
   }, [weekData]);
 
   const setEmployeeFields = useCallback((fields: Partial<EmployeeInfo>) => {
-    setEmployeeInfo((prev) => {
-      const updated = { ...prev, ...fields };
-      if ("rate" in fields) {
-        const rate = Number(fields.rate) || 0;
-        setWeekData((prevWeek) => {
-          const updatedWeek = { ...prevWeek };
-          const totalHrs = Object.values(prevWeek).reduce(
-            (sum, d) => sum + (Number(d.hours) || 0), 0
-          );
-          updatedWeek["Saturday"] = {
-            ...prevWeek["Saturday"],
-            billHours: rate ? String(Math.round(totalHrs * rate * 100) / 100) : "",
-          };
-          return updatedWeek;
-        });
-      }
-      return updated;
-    });
+    setEmployeeInfo((prev) => ({ ...prev, ...fields }));
   }, []);
 
   const setProjectFields = useCallback((fields: Partial<ProjectInfo>) => {
@@ -221,8 +173,6 @@ export function useTimesheetForm() {
     projectInfo,
     weekData,
     totalHours,
-    totalBillHours,
-    totalAmount,
     validationErrors,
     submitted,
     saturdayHasData,

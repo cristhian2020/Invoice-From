@@ -39,7 +39,6 @@ export interface TimesheetData {
     name: string;
     operator: string;
     consultantId: string;
-    rate: string;
   };
   projectInfo: {
     invoice: string;
@@ -48,8 +47,6 @@ export interface TimesheetData {
   };
   weekData: any;
   totalHours: number;
-  totalBillHours: number;
-  totalAmount: number;
   submittedBy: string;
   submittedAt?: any;
 }

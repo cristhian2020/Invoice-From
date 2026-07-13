@@ -88,7 +88,7 @@ export default function ProjectInfoSection({
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">INVOICE *</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">PO NUMBER *</label>
           <input
             type="text"
             name="invoice"
@@ -97,7 +97,7 @@ export default function ProjectInfoSection({
             placeholder="Ej: 17"
             className={getInputClass("invoice")}
           />
-          {errors.invoice && <p className="text-red-500 text-xs mt-1">Required field invoice</p>}
+          {errors.invoice && <p className="text-red-500 text-xs mt-1">Required field PO number</p>}
         </div>
         <div className="relative">
           <label className="block text-xs font-medium text-gray-600 mb-1">PROJECT # *</label>

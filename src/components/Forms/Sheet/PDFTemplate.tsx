@@ -8,7 +8,6 @@ interface Props {
   projectInfo: ProjectInfo;
   weekData: Record<string, DayData>;
   totalHours: number;
-  totalBillHours: number;
 }
 
 const S = {
@@ -73,14 +72,6 @@ const S = {
   totalsVal: { borderRight: "2px solid #000", fontWeight: 700, fontSize: 18, color: "#000" },
 
   notes: { marginTop: 16, fontSize: 16, fontWeight: 500 },
-  billBox: {
-    marginTop: 32,
-    display: "flex",
-    justifyContent: "flex-end",
-  } as const,
-  billBoxInner: { border: "2px solid #000", display: "flex", alignItems: "center" } as const,
-  billLabel: { padding: 8, borderRight: "2px solid #000", fontWeight: 700, textTransform: "uppercase" as const },
-  billValue: { padding: 8, width: 128, textAlign: "center" as const, fontWeight: 700, fontSize: 18 },
 
   signature: { marginTop: 48, display: "flex", alignItems: "flex-end", gap: 8, fontSize: 18, fontWeight: 700 } as const,
   signatureLine: { flex: 1, borderBottom: "2px solid #000", marginBottom: 4 },
@@ -94,7 +85,7 @@ function getDayColors(day: string): [string, string] {
 }
 
 const PDFTemplate = forwardRef<HTMLDivElement, Props>(
-  ({ employeeInfo, projectInfo, weekData, totalHours, totalBillHours }, ref) => (
+  ({ employeeInfo, projectInfo, weekData, totalHours }, ref) => (
     <div
       id="pdf-template-wrapper"
       style={{ position: "absolute", left: -9999, top: -9999 }}
@@ -120,17 +111,13 @@ const PDFTemplate = forwardRef<HTMLDivElement, Props>(
           <div style={S.infoCol(true)}>
             <div style={S.label(true)}>Name</div>
             <div style={S.value(true)}>{employeeInfo.name}</div>
-            <div style={S.label(true)}>Operator</div>
+            <div style={S.label(true)}>Cliente</div>
             <div style={S.value(true)}>{employeeInfo.operator}</div>
             <div style={S.label(false)}>Consultant ID</div>
             <div style={S.value(false)}>{employeeInfo.consultantId}</div>
-            <div style={{ ...S.label(false), borderTop: "2px solid #000" }}>Rate</div>
-            <div style={{ ...S.value(false), borderTop: "2px solid #000" }}>
-              {employeeInfo.rate ? `$${employeeInfo.rate}/hr` : ""}
-            </div>
           </div>
           <div style={S.infoCol(false)}>
-            <div style={S.label(true)}>Invoice</div>
+            <div style={S.label(true)}>PO Number</div>
             <div style={S.value(true)}>{projectInfo.invoice}</div>
             <div style={S.label(true)}>Project #</div>
             <div style={S.value(true)}>{projectInfo.projectNumber}</div>
@@ -144,7 +131,7 @@ const PDFTemplate = forwardRef<HTMLDivElement, Props>(
         <table style={S.table}>
           <thead>
             <tr style={{ backgroundColor: "#fff", borderBottom: "2px solid #000" }}>
-              {["Day", "Date", "Start Time", "End Time", "Hours", "Bill Hours"].map((h) => (
+              {["Day", "Date", "Start Time", "End Time", "Hours"].map((h) => (
                 <th key={h} style={S.th}>{h}</th>
               ))}
               <th style={S.thLast}>Remarks</th>
@@ -170,7 +157,6 @@ const PDFTemplate = forwardRef<HTMLDivElement, Props>(
                       : ""}
                   </td>
                   <td style={S.td}>{weekData[day].hours || ""}</td>
-                  <td style={S.td}>{day === "Saturday" ? weekData[day].billHours : ""}</td>
                   <td style={S.tdLast}>{weekData[day].remarks}</td>
                 </tr>
               );
@@ -178,7 +164,6 @@ const PDFTemplate = forwardRef<HTMLDivElement, Props>(
             <tr style={S.totalsRow}>
               <td colSpan={4} style={S.totalsLabel}>Totals</td>
               <td style={S.totalsVal}>{totalHours}</td>
-              <td style={S.totalsVal}>{totalBillHours}</td>
               <td />
             </tr>
           </tbody>
@@ -189,13 +174,6 @@ const PDFTemplate = forwardRef<HTMLDivElement, Props>(
           <p>Time sheets must be turned in every week at the end of the last day worked.</p>
           <p>The work period begins Sunday morning and ends Saturday night.</p>
           <p>Send timesheets to: time@elementsafetyllc.com</p>
-        </div>
-
-        <div style={S.billBox}>
-          <div style={S.billBoxInner}>
-            <div style={S.billLabel}>Total Bill Hours =</div>
-            <div style={S.billValue}>{totalBillHours}</div>
-          </div>
         </div>
 
         <div style={S.signature}>

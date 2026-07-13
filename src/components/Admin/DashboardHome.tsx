@@ -28,7 +28,7 @@ export default function DashboardHome() {
     fetchAll();
   }, []);
 
-  const totalAmount = timesheets.reduce((sum, ts) => sum + (ts.totalAmount || 0), 0);
+  const totalHoursAll = timesheets.reduce((sum, ts) => sum + (ts.totalHours || 0), 0);
 
   const stats = [
     {
@@ -68,11 +68,11 @@ export default function DashboardHome() {
       textColor: "text-amber-600",
     },
     {
-      label: "Total Billed",
-      value: `$${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      label: "Total Hours",
+      value: `${totalHoursAll.toLocaleString("en-US", { minimumFractionDigits: 0 })} hrs`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
       color: "bg-red-500",
@@ -133,7 +133,6 @@ export default function DashboardHome() {
                   <th className="px-5 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Employee</th>
                   <th className="px-5 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Project</th>
                   <th className="px-5 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Hours</th>
-                  <th className="px-5 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Amount</th>
                   <th className="px-5 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Date</th>
                 </tr>
               </thead>
@@ -158,7 +157,6 @@ export default function DashboardHome() {
                           {ts.totalHours} hrs
                         </span>
                       </td>
-                      <td className="px-5 py-3 font-semibold text-slate-800">${ts.totalAmount?.toFixed(2) || "0.00"}</td>
                       <td className="px-5 py-3 text-slate-500 text-xs">{date}</td>
                     </tr>
                   );

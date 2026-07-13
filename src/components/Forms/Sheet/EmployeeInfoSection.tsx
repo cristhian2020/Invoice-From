@@ -57,7 +57,7 @@ export default function EmployeeInfoSection({
       <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3">
         Employee Information
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">CONSULTANT ID / EMPLOYEE NUMBER *</label>
           <input
@@ -94,7 +94,7 @@ export default function EmployeeInfoSection({
           {errors.name && <p className="text-red-500 text-xs mt-1">Required field name</p>}
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">OPERATOR *</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">CLIENTE *</label>
           <input
             type="text"
             name="operator"
@@ -104,21 +104,9 @@ export default function EmployeeInfoSection({
             className={getInputClass("operator")}
             required
           />
-          {errors.operator && <p className="text-red-500 text-xs mt-1">Required field operator</p>}
+          {errors.operator && <p className="text-red-500 text-xs mt-1">Required field cliente</p>}
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">RATE ($/hr) *</label>
-          <input
-            type="number"
-            name="rate"
-            value={employeeInfo.rate}
-            onChange={onChange}
-            placeholder="e.g. 25"
-            className={getInputClass("rate")}
-            required
-          />
-          {errors.rate && <p className="text-red-500 text-xs mt-1">Required field rate</p>}
-        </div>
+
       </div>
     </section>
   );

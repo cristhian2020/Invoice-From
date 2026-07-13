@@ -13,7 +13,11 @@ import {
   getUserProfile,
 } from "../../../firebase/firestoreService";
 
-const FormSheet = () => {
+interface FormSheetProps {
+  hideHeader?: boolean;
+}
+
+const FormSheet = ({ hideHeader }: FormSheetProps = {}) => {
   const form = useTimesheetForm();
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -104,8 +108,6 @@ const FormSheet = () => {
         projectInfo: form.projectInfo,
         weekData: form.weekData,
         totalHours: form.totalHours,
-        totalBillHours: form.totalBillHours,
-        totalAmount: form.totalAmount,
         submittedBy: user?.uid || "anonymous",
       };
 
@@ -144,9 +146,6 @@ const FormSheet = () => {
           const end = d.endTime || "—";
           const hrs = d.hours || 0;
           let line = `  ${day} (${d.date}):\n    Start: ${start}  |  End: ${end}  |  Hours: ${hrs}`;
-          if (day === "Saturday" && d.billHours) {
-            line += `  |  Bill Hours: ${d.billHours}`;
-          }
           if (d.remarks && d.remarks.trim()) {
             line += `\n    Remarks: ${d.remarks.trim()}`;
           }
@@ -159,12 +158,11 @@ const FormSheet = () => {
 
 EMPLOYEE INFORMATION:
   Name: ${form.employeeInfo.name}
-  Operator: ${form.employeeInfo.operator}
+  Cliente: ${form.employeeInfo.operator}
   Consultant ID: ${form.employeeInfo.consultantId}
-  Rate: $${form.employeeInfo.rate}/hr
 
 PROJECT INFORMATION:
-  Invoice #: ${form.projectInfo.invoice}
+  PO Number: ${form.projectInfo.invoice}
   Project #: ${form.projectInfo.projectNumber}
   Location: ${form.projectInfo.location}
 
@@ -178,9 +176,6 @@ ${dailyLines}
 TOTALS:
 ================================================
   Total Hours: ${form.totalHours} hrs
-  Total Billable Hours: ${form.totalBillHours} hrs
-  Rate: $${form.employeeInfo.rate}/hr
-  Total Amount: $${form.totalAmount.toFixed(2)}
 `;
 
       const body = encodeURIComponent(bodyText);
@@ -205,48 +200,50 @@ TOTALS:
     <div className="min-h-screen bg-gray-100 py-4 px-2 sm:py-8 sm:px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-3 sm:p-6">
         {/* User Profile & Logout Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center border-b border-gray-200 pb-4 mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            {user?.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="Avatar"
-                className="w-10 h-10 rounded-full border border-gray-300"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-10 h-10 bg-red-100 text-red-600 font-bold flex items-center justify-center rounded-full border border-red-200 uppercase text-lg">
-                {user?.email?.charAt(0) || "U"}
+        {!hideHeader && (
+          <div className="flex flex-col sm:flex-row justify-between items-center border-b border-gray-200 pb-4 mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full border border-gray-300"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-red-100 text-red-600 font-bold flex items-center justify-center rounded-full border border-red-200 uppercase text-lg">
+                  {user?.email?.charAt(0) || "U"}
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  {user?.displayName || user?.email?.split("@")[0]}
+                </p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
-            )}
-            <div>
-              <p className="text-sm font-semibold text-gray-800">
-                {user?.displayName || user?.email?.split("@")[0]}
-              </p>
-              <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
-          </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-400 text-white font-semibold rounded-lg text-sm transition-all border border-red-200 hover:text-white hover:border-red-200 cursor-pointer"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-4 h-4"
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-400 text-white font-semibold rounded-lg text-sm transition-all border border-red-200 hover:text-white hover:border-red-200 cursor-pointer"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
-              />
-            </svg>
-            Log Out
-          </button>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+                />
+              </svg>
+              Log Out
+            </button>
+          </div>
+        )}
 
         <h1 className="text-xl sm:text-3xl font-bold text-gray-800 text-center mb-4 sm:mb-8">
           Element Safety, LLC. - Time Sheet Generator
@@ -270,9 +267,6 @@ TOTALS:
           <DailyHoursTable
             weekData={form.weekData}
             totalHours={form.totalHours}
-            totalBillHours={form.totalBillHours}
-            totalAmount={form.totalAmount}
-            rate={form.employeeInfo.rate}
             onDayChange={form.handleWeekDataChange}
             dayErrors={form.submitted ? form.validationErrors.days : undefined}
           />
@@ -315,7 +309,6 @@ TOTALS:
         projectInfo={form.projectInfo}
         weekData={form.weekData}
         totalHours={form.totalHours}
-        totalBillHours={form.totalBillHours}
       />
     </div>
   );

@@ -136,12 +136,6 @@ export default function TimesheetsViewer() {
                       Hours
                     </th>
                     <th className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                      Rate
-                    </th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">
                       Submitted
                     </th>
                   </tr>
@@ -245,18 +239,12 @@ function DesktopRow({
             {ts.totalHours} hrs
           </span>
         </td>
-        <td className="px-4 py-3 text-slate-600">
-          ${ts.employeeInfo?.rate || "0"}/hr
-        </td>
-        <td className="px-4 py-3 font-semibold text-slate-800">
-          ${ts.totalAmount?.toFixed(2) || "0.00"}
-        </td>
         <td className="px-4 py-3 text-slate-500 text-xs">{date}</td>
       </tr>
 
       {isExpanded && (
         <tr>
-          <td colSpan={8} className="p-0">
+          <td colSpan={6} className="p-0">
             <ExpandedDetail ts={ts} />
           </td>
         </tr>
@@ -325,12 +313,6 @@ function MobileCard({
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
               {ts.totalHours} hrs
             </span>
-            <span className="text-slate-500">
-              ${ts.employeeInfo?.rate || "0"}/hr
-            </span>
-            <span className="font-semibold text-slate-700">
-              ${ts.totalAmount?.toFixed(2) || "0.00"}
-            </span>
             <span className="text-slate-400">{date}</span>
           </div>
         </div>
@@ -386,17 +368,14 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
               {ts.employeeInfo?.name}
             </p>
             <p className="text-slate-600">
-              <span className="font-medium text-slate-500">Operator:</span>{" "}
+              <span className="font-medium text-slate-500">Cliente:</span>{" "}
               {ts.employeeInfo?.operator || "—"}
             </p>
             <p className="text-slate-600">
               <span className="font-medium text-slate-500">ID:</span>{" "}
               {ts.employeeInfo?.consultantId}
             </p>
-            <p className="text-slate-600">
-              <span className="font-medium text-slate-500">Rate:</span> $
-              {ts.employeeInfo?.rate}/hr
-            </p>
+
           </div>
         </div>
 
@@ -421,7 +400,7 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
           </h4>
           <div className="space-y-1.5 text-sm">
             <p className="text-slate-600">
-              <span className="font-medium text-slate-500">Invoice:</span>{" "}
+              <span className="font-medium text-slate-500">PO Number:</span>{" "}
               {ts.projectInfo?.invoice}
             </p>
             <p className="text-slate-600">
@@ -468,7 +447,6 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
                 <th className="px-4 py-2.5 font-semibold">Start</th>
                 <th className="px-4 py-2.5 font-semibold">End</th>
                 <th className="px-4 py-2.5 font-semibold">Hours</th>
-                <th className="px-4 py-2.5 font-semibold">Bill Hrs</th>
                 <th className="px-4 py-2.5 font-semibold">Remarks</th>
               </tr>
             </thead>
@@ -522,11 +500,6 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
                       <td className="px-4 py-2 font-medium text-slate-700">
                         {d.hours || 0}
                       </td>
-                      <td className="px-4 py-2 text-slate-600">
-                        {day === "Saturday"
-                          ? d.billHours || "—"
-                          : "—"}
-                      </td>
                       <td className="px-4 py-2 text-slate-500 max-w-xs truncate">
                         {d.remarks?.trim() || "—"}
                       </td>
@@ -542,18 +515,7 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
                 <td className="px-4 py-2.5 text-slate-800">
                   {ts.totalHours} hrs
                 </td>
-                <td className="px-4 py-2.5 text-slate-800">
-                  {ts.totalBillHours} hrs
-                </td>
                 <td className="px-4 py-2.5"></td>
-              </tr>
-              <tr className="bg-blue-50 font-bold text-sm">
-                <td colSpan={4} className="px-4 py-2.5 text-right text-blue-700 text-xs uppercase tracking-wider">
-                  Total Amount ({ts.totalHours} hrs × ${ts.employeeInfo?.rate}/hr)
-                </td>
-                <td colSpan={3} className="px-4 py-2.5 text-blue-800 text-base">
-                  ${ts.totalAmount?.toFixed(2) || "0.00"}
-                </td>
               </tr>
             </tfoot>
           </table>
@@ -597,12 +559,7 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
                       </span>
                     </div>
                   </div>
-                  {day === "Saturday" && d.billHours && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      <span className="text-slate-400">Bill Hours:</span>{" "}
-                      {d.billHours}
-                    </p>
-                  )}
+
                   {d.remarks?.trim() && (
                     <p className="text-xs text-slate-500 mt-1 bg-amber-50 rounded px-2 py-1 border border-amber-100">
                       <span className="font-medium text-amber-700">Remark:</span>{" "}
@@ -618,16 +575,6 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
             <div className="flex justify-between text-sm font-semibold text-slate-700">
               <span>Total Hours</span>
               <span>{ts.totalHours} hrs</span>
-            </div>
-            <div className="flex justify-between text-sm text-slate-600 mt-0.5">
-              <span>Bill Hours</span>
-              <span>{ts.totalBillHours} hrs</span>
-            </div>
-            <div className="flex justify-between text-sm font-bold text-blue-700 mt-1 pt-1 border-t border-slate-200">
-              <span>
-                Total ({ts.totalHours} × ${ts.employeeInfo?.rate}/hr)
-              </span>
-              <span>${ts.totalAmount?.toFixed(2) || "0.00"}</span>
             </div>
           </div>
         </div>

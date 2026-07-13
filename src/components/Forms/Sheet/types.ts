@@ -5,7 +5,6 @@ export interface DayData {
   startTime: string;
   endTime: string;
   hours: number;
-  billHours: string;
   remarks: string;
 }
 
@@ -13,7 +12,6 @@ export interface EmployeeInfo {
   name: string;
   operator: string;
   consultantId: string;
-  rate: string;
 }
 
 export interface ProjectInfo {
@@ -43,7 +41,6 @@ export const INITIAL_WEEK_DATA: Record<string, DayData> = (() => {
         startTime: "",
         endTime: "",
         hours: 0,
-        billHours: "",
         remarks: "",
       },
     ]),
