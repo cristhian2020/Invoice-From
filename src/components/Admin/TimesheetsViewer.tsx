@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAllTimesheets } from "../../firebase/firestoreService";
+import { getPaginatedTimesheets } from "../../firebase/firestoreService";
 import type { TimesheetData } from "../../firebase/firestoreService";
 
 const DAYS_ORDER = [
@@ -27,18 +27,35 @@ function formatTime(t: string | undefined) {
 export default function TimesheetsViewer() {
   const [timesheets, setTimesheets] = useState<TimesheetData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const PAGE_SIZE = 20;
+
   useEffect(() => {
-    const fetch = async () => {
+    const fetchInitial = async () => {
       setLoading(true);
-      const { timesheets: data } = await getAllTimesheets();
+      const { timesheets: data, lastDoc: doc } = await getPaginatedTimesheets(PAGE_SIZE, null);
       setTimesheets(data);
+      setLastDoc(doc);
+      setHasMore(data.length === PAGE_SIZE);
       setLoading(false);
     };
-    fetch();
+    fetchInitial();
   }, []);
+
+  const loadMore = async () => {
+    if (!lastDoc || !hasMore || loadingMore) return;
+    setLoadingMore(true);
+    const { timesheets: data, lastDoc: newDoc } = await getPaginatedTimesheets(PAGE_SIZE, lastDoc);
+    setTimesheets((prev) => [...prev, ...data]);
+    setLastDoc(newDoc);
+    setHasMore(data.length === PAGE_SIZE);
+    setLoadingMore(false);
+  };
 
   const filtered = timesheets.filter((ts) => {
     const q = search.toLowerCase();
@@ -164,6 +181,29 @@ export default function TimesheetsViewer() {
                 />
               ))}
             </div>
+
+            {hasMore && (
+              <div className="py-6 flex justify-center border-t border-slate-200">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-colors border ${
+                    loadingMore 
+                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 shadow-sm"
+                  }`}
+                >
+                  {loadingMore ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin"></div>
+                      Cargando...
+                    </span>
+                  ) : (
+                    "Cargar más"
+                  )}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

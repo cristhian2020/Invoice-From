@@ -10,7 +10,12 @@ import {
   updateDoc,
   deleteDoc,
   orderBy,
-  serverTimestamp 
+  serverTimestamp,
+  limit,
+  startAfter,
+  getCountFromServer,
+  getAggregateFromServer,
+  sum
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -80,7 +85,7 @@ export const getUserProfile = async (uid: string): Promise<{ profile: UserProfil
     const userRef = doc(db, "Users", uid);
     const docSnap = await getDoc(userRef);
     if (docSnap.exists()) {
-      return { profile: { uid, ...docSnap.data() } as UserProfile, error: null };
+      return { profile: { uid, ...(docSnap.data() as object) } as UserProfile, error: null };
     }
     return { profile: null, error: null };
   } catch (error) {
@@ -100,7 +105,7 @@ export const getUserByEmployeeNumber = async (employeeNumber: string): Promise<{
     
     if (!querySnapshot.empty) {
       const firstDoc = querySnapshot.docs[0];
-      return { profile: { uid: firstDoc.id, ...firstDoc.data() } as UserProfile, error: null };
+      return { profile: { uid: firstDoc.id, ...(firstDoc.data() as object) } as UserProfile, error: null };
     }
     return { profile: null, error: null };
   } catch (error) {
@@ -147,7 +152,7 @@ export const getAllProjectsFull = async (): Promise<{ projects: Project[]; error
     const querySnapshot = await getDocs(projectsRef);
     const projects: Project[] = [];
     querySnapshot.forEach((docSnap) => {
-      projects.push({ id: docSnap.id, ...docSnap.data() } as Project);
+      projects.push({ id: docSnap.id, ...(docSnap.data() as object) } as Project);
     });
     return { projects, error: null };
   } catch (error) {
@@ -232,7 +237,7 @@ export const getAllTimesheets = async (): Promise<{ timesheets: TimesheetData[];
     const querySnapshot = await getDocs(q);
     const timesheets: TimesheetData[] = [];
     querySnapshot.forEach((docSnap) => {
-      timesheets.push({ id: docSnap.id, ...docSnap.data() } as TimesheetData);
+      timesheets.push({ id: docSnap.id, ...(docSnap.data() as object) } as TimesheetData);
     });
     return { timesheets, error: null };
   } catch (error) {
@@ -240,6 +245,101 @@ export const getAllTimesheets = async (): Promise<{ timesheets: TimesheetData[];
     return { timesheets: [], error: error instanceof Error ? error.message : String(error) };
   }
 };
+
+export async function getTimesheetsByUser(userId: string) {
+  try {
+    const q = query(
+      collection(db, "Timesheets"),
+      where("submittedBy", "==", userId),
+      orderBy("submittedAt", "desc"),
+    );
+    const snap = await getDocs(q);
+    return {
+      timesheets: snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as object),
+      })) as TimesheetData[],
+      error: null,
+    };
+  } catch (error) {
+    console.error("Error fetching timesheets:", error);
+    return { timesheets: [], error };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PAGINATION & AGGREGATION QUERIES
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches a page of timesheets.
+ * @param pageSize Number of documents to fetch
+ * @param lastDoc The last document snapshot from the previous page (null for first page)
+ */
+export async function getPaginatedTimesheets(pageSize: number = 20, lastDoc: any = null) {
+  try {
+    let q;
+    if (lastDoc) {
+      q = query(
+        collection(db, "Timesheets"),
+        orderBy("submittedAt", "desc"),
+        startAfter(lastDoc),
+        limit(pageSize)
+      );
+    } else {
+      q = query(
+        collection(db, "Timesheets"),
+        orderBy("submittedAt", "desc"),
+        limit(pageSize)
+      );
+    }
+    
+    const snap = await getDocs(q);
+    const timesheets = snap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as object),
+    })) as TimesheetData[];
+    
+    const newLastDoc = snap.docs[snap.docs.length - 1];
+    
+    return { timesheets, lastDoc: newLastDoc, error: null };
+  } catch (error) {
+    console.error("Error fetching paginated timesheets:", error);
+    return { timesheets: [], lastDoc: null, error };
+  }
+}
+
+/**
+ * Fetches aggregate stats for the dashboard without downloading all documents.
+ */
+export async function getDashboardStats() {
+  try {
+    const usersCountSnap = await getCountFromServer(collection(db, "Users"));
+    const totalUsers = usersCountSnap.data().count;
+
+    const projectsCountSnap = await getCountFromServer(collection(db, "Projects"));
+    const totalProjects = projectsCountSnap.data().count;
+
+    const tsCountSnap = await getCountFromServer(collection(db, "Timesheets"));
+    const totalTimesheets = tsCountSnap.data().count;
+
+    const tsSumSnap = await getAggregateFromServer(collection(db, "Timesheets"), {
+      totalHours: sum("totalHours")
+    });
+    const totalHours = tsSumSnap.data().totalHours || 0;
+
+    return {
+      totalUsers,
+      totalProjects,
+      totalTimesheets,
+      totalHours,
+      error: null
+    };
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    return { totalUsers: 0, totalProjects: 0, totalTimesheets: 0, totalHours: 0, error };
+  }
+}
 
 // ─────────────────────────────────────────────
 // USERS (Admin)
@@ -254,7 +354,7 @@ export const getAllUsers = async (): Promise<{ users: UserProfile[]; error: stri
     const querySnapshot = await getDocs(usersRef);
     const users: UserProfile[] = [];
     querySnapshot.forEach((docSnap) => {
-      users.push({ uid: docSnap.id, ...docSnap.data() } as UserProfile);
+      users.push({ uid: docSnap.id, ...(docSnap.data() as object) } as UserProfile);
     });
     return { users, error: null };
   } catch (error) {

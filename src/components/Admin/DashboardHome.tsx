@@ -1,39 +1,38 @@
 import { useEffect, useState } from "react";
 import {
-  getAllTimesheets,
-  getAllUsers,
-  getAllProjectsFull,
+  getPaginatedTimesheets,
+  getDashboardStats,
 } from "../../firebase/firestoreService";
-import type { TimesheetData, UserProfile, Project } from "../../firebase/firestoreService";
+import type { TimesheetData } from "../../firebase/firestoreService";
 
 export default function DashboardHome() {
-  const [timesheets, setTimesheets] = useState<TimesheetData[]>([]);
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [recentTimesheets, setRecentTimesheets] = useState<TimesheetData[]>([]);
+  const [statsData, setStatsData] = useState({ users: 0, projects: 0, timesheets: 0, totalHours: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
-      const [tsResult, usersResult, projResult] = await Promise.all([
-        getAllTimesheets(),
-        getAllUsers(),
-        getAllProjectsFull(),
+      const [tsResult, statsResult] = await Promise.all([
+        getPaginatedTimesheets(8, null),
+        getDashboardStats(),
       ]);
-      setTimesheets(tsResult.timesheets);
-      setUsers(usersResult.users);
-      setProjects(projResult.projects);
+      setRecentTimesheets(tsResult.timesheets);
+      setStatsData({
+        users: statsResult.totalUsers,
+        projects: statsResult.totalProjects,
+        timesheets: statsResult.totalTimesheets,
+        totalHours: statsResult.totalHours,
+      });
       setLoading(false);
     };
     fetchAll();
   }, []);
 
-  const totalHoursAll = timesheets.reduce((sum, ts) => sum + (ts.totalHours || 0), 0);
-
   const stats = [
     {
       label: "Employees",
-      value: users.length,
+      value: statsData.users,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
@@ -45,7 +44,7 @@ export default function DashboardHome() {
     },
     {
       label: "Projects",
-      value: projects.length,
+      value: statsData.projects,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
@@ -57,7 +56,7 @@ export default function DashboardHome() {
     },
     {
       label: "Timesheets",
-      value: timesheets.length,
+      value: statsData.timesheets,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -69,7 +68,7 @@ export default function DashboardHome() {
     },
     {
       label: "Total Hours",
-      value: `${totalHoursAll.toLocaleString("en-US", { minimumFractionDigits: 0 })} hrs`,
+      value: `${statsData.totalHours.toLocaleString("en-US", { minimumFractionDigits: 0 })} hrs`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -91,8 +90,6 @@ export default function DashboardHome() {
       </div>
     );
   }
-
-  const recentTimesheets = timesheets.slice(0, 8);
 
   return (
     <div className="space-y-6">

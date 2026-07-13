@@ -49,6 +49,18 @@ const FormSheet = ({ hideHeader }: FormSheetProps = {}) => {
     if (!pdfTemplateRef.current) return;
     setIsGeneratingPDF(true);
 
+    // Save timesheet in Firestore database automatically when downloading
+    const timesheetData = {
+      employeeInfo: form.employeeInfo,
+      projectInfo: form.projectInfo,
+      weekData: form.weekData,
+      totalHours: form.totalHours,
+      submittedBy: user?.uid || "anonymous",
+    };
+    saveTimesheet(timesheetData).catch((err) => {
+      console.error("Failed to save timesheet on download:", err);
+    });
+
     try {
       const canvas = await html2canvas(pdfTemplateRef.current, {
         scale: 2,
