@@ -408,7 +408,7 @@ function ExpandedDetail({ ts }: { ts: TimesheetData }) {
               {ts.employeeInfo?.name}
             </p>
             <p className="text-slate-600">
-              <span className="font-medium text-slate-500">Cliente:</span>{" "}
+              <span className="font-medium text-slate-500">Client:</span>{" "}
               {ts.employeeInfo?.operator || "—"}
             </p>
             <p className="text-slate-600">

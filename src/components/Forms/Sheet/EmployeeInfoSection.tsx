@@ -94,7 +94,7 @@ export default function EmployeeInfoSection({
           {errors.name && <p className="text-red-500 text-xs mt-1">Required field name</p>}
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">CLIENTE *</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">CLIENT *</label>
           <input
             type="text"
             name="operator"
@@ -104,7 +104,7 @@ export default function EmployeeInfoSection({
             className={getInputClass("operator")}
             required
           />
-          {errors.operator && <p className="text-red-500 text-xs mt-1">Required field cliente</p>}
+          {errors.operator && <p className="text-red-500 text-xs mt-1">Required field client</p>}
         </div>
 
       </div>

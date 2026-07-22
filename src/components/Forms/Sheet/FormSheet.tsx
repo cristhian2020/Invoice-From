@@ -170,7 +170,7 @@ const FormSheet = ({ hideHeader }: FormSheetProps = {}) => {
 
 EMPLOYEE INFORMATION:
   Name: ${form.employeeInfo.name}
-  Cliente: ${form.employeeInfo.operator}
+  Client: ${form.employeeInfo.operator}
   Consultant ID: ${form.employeeInfo.consultantId}
 
 PROJECT INFORMATION:
