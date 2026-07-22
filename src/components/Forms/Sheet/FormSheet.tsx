@@ -289,6 +289,8 @@ TOTALS:
             onSend={handleSend}
             isSaving={isSaving}
             error={emailError}
+            onDownloadPDF={downloadPDF}
+            isGeneratingPDF={isGeneratingPDF}
           />
 
           <div className="flex flex-col items-center gap-3 pt-4 border-t">
@@ -300,17 +302,6 @@ TOTALS:
                   Aun hay campos sin llenar
                 </p>
               )}
-            <button
-              onClick={downloadPDF}
-              disabled={isGeneratingPDF}
-              className={`w-full sm:w-auto px-6 py-3 text-white font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer ${
-                isGeneratingPDF
-                  ? "bg-red-400 cursor-not-allowed"
-                  : "bg-red-600 hover:bg-red-700"
-              }`}
-            >
-              {isGeneratingPDF ? "Generando PDF..." : "Download PDF"}
-            </button>
           </div>
         </div>
       </div>

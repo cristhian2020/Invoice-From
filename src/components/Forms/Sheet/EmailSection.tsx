@@ -6,6 +6,8 @@ interface Props {
   onSend: () => void;
   isSaving: boolean;
   error?: string;
+  onDownloadPDF?: () => void;
+  isGeneratingPDF?: boolean;
 }
 
 export default function EmailSection({
@@ -13,7 +15,9 @@ export default function EmailSection({
   onChange,
   onSend,
   isSaving,
-  error
+  error,
+  onDownloadPDF,
+  isGeneratingPDF
 }: Props) {
   return (
     <section className="mt-6 border-t pt-6">
@@ -36,7 +40,7 @@ export default function EmailSection({
         </div>
         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col sm:flex-row gap-4">
           <button
             type="button"
             onClick={onSend}
@@ -57,6 +61,20 @@ export default function EmailSection({
               </>
             )}
           </button>
+
+          {onDownloadPDF && (
+            <button
+              onClick={onDownloadPDF}
+              disabled={isGeneratingPDF}
+              className={`w-full sm:w-auto px-6 py-3 text-white font-semibold rounded-lg transition-colors shadow-md active:scale-[0.98] focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer flex items-center justify-center ${
+                isGeneratingPDF
+                  ? "bg-red-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              {isGeneratingPDF ? "Generando PDF..." : "Download PDF"}
+            </button>
+          )}
         </div>
       </div>
     </section>
