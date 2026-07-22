@@ -23,7 +23,7 @@ function loadFromStorage() {
 function snapTo15(time: string): string {
   if (!time) return time;
   const [h, m] = time.split(":").map(Number);
-  const snapped = Math.round(m / 15) * 15;
+  const snapped = Math.ceil(m / 15) * 15;
   const finalH = snapped === 60 ? h + 1 : h;
   const finalM = snapped === 60 ? 0 : snapped;
   return `${String(finalH % 24).padStart(2, "0")}:${String(finalM).padStart(2, "0")}`;

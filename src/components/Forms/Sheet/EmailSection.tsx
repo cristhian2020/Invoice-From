@@ -21,6 +21,7 @@ export default function EmailSection({
 }: Props) {
   return (
     <section className="mt-6 border-t pt-6">
+      {/* 
       <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3">
         Send Timesheet
       </h2>
@@ -39,28 +40,32 @@ export default function EmailSection({
           />
         </div>
         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      </div>
+      */}
         
-        <div className="mt-4 flex flex-col sm:flex-row gap-4">
-          <button
-            type="button"
-            onClick={onSend}
-            disabled={isSaving}
-            className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-green-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                Sending.....
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
-                SENT
-              </>
-            )}
-          </button>
+      <div className="mt-4 flex flex-col sm:flex-row gap-4">
+        {/*
+        <button
+          type="button"
+          onClick={onSend}
+          disabled={isSaving}
+          className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-green-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSaving ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              Sending.....
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+              SENT
+            </>
+          )}
+        </button>
+        */}
 
           {onDownloadPDF && (
             <button
@@ -76,7 +81,6 @@ export default function EmailSection({
             </button>
           )}
         </div>
-      </div>
     </section>
   );
 }
