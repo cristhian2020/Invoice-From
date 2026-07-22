@@ -11,11 +11,11 @@ interface Props {
 }
 
 export default function EmailSection({
-  recipients,
-  onChange,
-  onSend,
-  isSaving,
-  error,
+  // recipients,
+  // onChange,
+  // onSend,
+  // isSaving,
+  // error,
   onDownloadPDF,
   isGeneratingPDF
 }: Props) {
